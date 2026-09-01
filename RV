@@ -1,0 +1,100 @@
+
+
+local Players = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local SettingsStore = DataStoreService:GetDataStore("RV_Settings_v1")
+
+-- RemoteEvents
+local folder = ReplicatedStorage:FindFirstChild("RV_Remotes")
+
+if not folder then
+	folder = Instance.new("Folder")
+	folder.Name = "RV_Remotes"
+	folder.Parent = ReplicatedStorage
+end
+
+local SettingsEvent = folder:FindFirstChild("Settings")
+
+if not SettingsEvent then
+	SettingsEvent = Instance.new("RemoteEvent")
+	SettingsEvent.Name = "Settings"
+	SettingsEvent.Parent = folder
+end
+
+local DEFAULT_SETTINGS = {
+	AutoFarmNPC = false,
+	AutoChest = false,
+	AutoAttack = false,
+}
+
+local function loadSettings(player)
+	local success, data = pcall(function()
+		return SettingsStore:GetAsync("Player_" .. player.UserId)
+	end)
+
+	if success and type(data) == "table" then
+		return data
+	end
+
+	return table.clone(DEFAULT_SETTINGS)
+end
+
+local function saveSettings(player, settings)
+	pcall(function()
+		SettingsStore:SetAsync(
+			"Player_" .. player.UserId,
+			settings
+		)
+	end)
+end
+
+Players.PlayerAdded:Connect(function(player)
+	local settings = loadSettings(player)
+
+	player:SetAttribute("RV_AutoFarmNPC", settings.AutoFarmNPC == true)
+	player:SetAttribute("RV_AutoChest", settings.AutoChest == true)
+	player:SetAttribute("RV_AutoAttack", settings.AutoAttack == true)
+end)
+
+SettingsEvent.OnServerEvent:Connect(function(player, setting, value)
+	if typeof(setting) ~= "string" then
+		return
+	end
+
+	if typeof(value) ~= "boolean" then
+		return
+	end
+
+	if setting == "AutoFarmNPC" then
+		player:SetAttribute("RV_AutoFarmNPC", value)
+
+	elseif setting == "AutoChest" then
+		player:SetAttribute("RV_AutoChest", value)
+
+	elseif setting == "AutoAttack" then
+		player:SetAttribute("RV_AutoAttack", value)
+
+	else
+		return
+	end
+
+	local settings = {
+		AutoFarmNPC = player:GetAttribute("RV_AutoFarmNPC"),
+		AutoChest = player:GetAttribute("RV_AutoChest"),
+		AutoAttack = player:GetAttribute("RV_AutoAttack"),
+	}
+
+	saveSettings(player, settings)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	local settings = {
+		AutoFarmNPC = player:GetAttribute("RV_AutoFarmNPC"),
+		AutoChest = player:GetAttribute("RV_AutoChest"),
+		AutoAttack = player:GetAttribute("RV_AutoAttack"),
+	}
+
+	saveSettings(player, settings)
+end)
