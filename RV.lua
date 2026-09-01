@@ -1,83 +1,102 @@
--- RV HUB
+-- RV HUB-- RV UI
 
 
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
 
+local player = Players.LocalPlayer
 local gui = Instance.new("ScreenGui")
-gui.Name = "RVHub"
+gui.Name = "RV_UI"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
-local main = Instance.new("Frame")
-main.Size = UDim2.fromOffset(280, 300)
-main.Position = UDim2.new(0.5, -140, 0.5, -150)
-main.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-main.BorderSizePixel = 0
-main.Parent = gui
+local Main = Instance.new("Frame")
+Main.Size = UDim2.fromOffset(360, 110)
+Main.Position = UDim2.new(0.5, -180, 0.2, 0)
+Main.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+Main.BorderSizePixel = 0
+Main.Parent = gui
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = main
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 55)
+Corner.Parent = Main
 
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(255, 110, 0)
-stroke.Thickness = 2
-stroke.Parent = main
+local Stroke = Instance.new("UIStroke")
+Stroke.Color = Color3.fromRGB(210, 80, 0)
+Stroke.Thickness = 2
+Stroke.Parent = Main
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 55)
-title.BackgroundColor3 = Color3.fromRGB(110, 45, 0)
-title.Text = "RV HUB"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.TextSize = 24
-title.Font = Enum.Font.GothamBold
-title.Parent = main
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.fromOffset(75, 35)
+Title.Position = UDim2.fromOffset(18, 10)
+Title.BackgroundTransparency = 1
+Title.Text = "RV"
+Title.TextColor3 = Color3.fromRGB(255, 110, 0)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 24
+Title.Parent = Main
 
-local function createToggle(text, y)
-    local enabled = false
+local function createBox(name, x, default)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.fromOffset(115, 20)
+    label.Position = UDim2.fromOffset(x, 15)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.Parent = Main
 
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -30, 0, 42)
-    button.Position = UDim2.fromOffset(15, y)
-    button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.TextSize = 15
-    button.Font = Enum.Font.Gotham
-    button.Text = text .. "    [ OFF ]"
-    button.Parent = main
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.fromOffset(115, 38)
+    box.Position = UDim2.fromOffset(x, 40)
+    box.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
+    box.TextColor3 = Color3.new(1, 1, 1)
+    box.PlaceholderText = tostring(default)
+    box.Text = ""
+    box.Font = Enum.Font.Gotham
+    box.TextSize = 15
+    box.ClearTextOnFocus = false
+    box.Parent = Main
 
     local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 8)
-    c.Parent = button
+    c.CornerRadius = UDim.new(0, 19)
+    c.Parent = box
 
-    button.MouseButton1Click:Connect(function()
-        enabled = not enabled
-
-        if enabled then
-            button.Text = text .. "    [ ON ]"
-            button.BackgroundColor3 = Color3.fromRGB(170, 70, 0)
-        else
-            button.Text = text .. "    [ OFF ]"
-            button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-        end
-    end)
+    return box
 end
 
-createToggle("Auto Farm", 70)
-createToggle("Auto Chest", 120)
-createToggle("Infinite Attack", 170)
+local WalkSpeed = createBox("Walk Speed", 105, 16)
+local JumpPower = createBox("Jump Power", 235, 50)
 
-local inventory = Instance.new("TextButton")
-inventory.Size = UDim2.new(1, -30, 0, 42)
-inventory.Position = UDim2.fromOffset(15, 225)
-inventory.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-inventory.Text = "Inventory"
-inventory.TextColor3 = Color3.new(1, 1, 1)
-inventory.TextSize = 15
-inventory.Font = Enum.Font.Gotham
-inventory.Parent = main
+-- Dragging
+local dragging = false
+local dragStart
+local startPosition
 
-local ic = Instance.new("UICorner")
-ic.CornerRadius = UDim.new(0, 8)
-ic.Parent = inventory
+Main.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPosition = Main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+
+        Main.Position = UDim2.new(
+            startPosition.X.Scale,
+            startPosition.X.Offset + delta.X,
+            startPosition.Y.Scale,
+            startPosition.Y.Offset + delta.Y
+        )
+    end
+end)local inventory =
